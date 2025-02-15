@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 rounded-lg">
+        <h2 class="text-center mb-4" style="color: #2c3e50; font-weight: bold;">Loan Eligibility Prediction</h2>
+        <form action="" method="POST" class="row g-3 needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Column 1 -->
+            <div class="col-md-6">
+                <label class="form-label">Current Loan Amount ($)</label>
+                <input type="number" class="form-control" name="current_loan_amount" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Term</label>
+                <select class="form-select" name="term" required>
+                    <option value="Short Term">Short Term</option>
+                    <option value="Long Term">Long Term</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Credit Score</label>
+                <input type="number" class="form-control" name="credit_score" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Annual Income ($)</label>
+                <input type="number" class="form-control" name="annual_income" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Years in Current Job</label>
+                <input type="text" class="form-control" name="years_in_current_job" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Monthly Debt ($)</label>
+                <input type="number" class="form-control" name="monthly_debt" required>
+            </div>
+            
+            <!-- Column 2 -->
+            <div class="col-md-6">
+                <label class="form-label">Years of Credit History</label>
+                <input type="number" class="form-control" name="years_credit_history" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Number of Open Accounts</label>
+                <input type="number" class="form-control" name="num_open_accounts" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Number of Credit Problems</label>
+                <input type="number" class="form-control" name="num_credit_problems">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Current Credit Balance ($)</label>
+                <input type="number" class="form-control" name="current_credit_balance" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Maximum Open Credit ($)</label>
+                <input type="number" class="form-control" name="max_open_credit">
+            </div>
+            
+            <!-- Home Ownership -->
+            <div class="col-md-6">
+                <label class="form-label">Home Ownership</label>
+                <select class="form-select" name="home_ownership" required>
+                    <option value="Mortgage">Mortgage</option>
+                    <option value="Own Home">Own Home</option>
+                    <option value="Rent">Rent</option>
+                </select>
+            </div>
+            
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Predict Loan Eligibility</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    body {
+        background-size: cover;
+        font-family: 'Poppins', sans-serif;
+    }
+    .card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .btn-primary {
+        background: #2c3e50;
+        border: none;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #1a252f;
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
