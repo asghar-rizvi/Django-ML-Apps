@@ -9,32 +9,91 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import numpy as np
 import joblib
+import os
 
-model = joblib.load("model/load_status_model.pkl")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MODEL_PATH = os.path.join(BASE_DIR, "core", "model", "loan_status_model.pkl")
+
+# Load the model
+if os.path.exists(MODEL_PATH):
+    model = joblib.load(MODEL_PATH)
+else:
+    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
 @login_required
-@csrf_exempt
-def predict(request):
+def predict_page(request):
     if request.method == "POST":
+        if model is None:
+            print("Model is not loaded!")  
+            return JsonResponse({"error": "Model not loaded"}, status=500)
+
         try:
-            credit_score = float(request.POST.get("credit_score"))
-            annual_income = float(request.POST.get("annual_income"))
-            years_in_current_job = float(request.POST.get("years_in_current_job"))
+            print("Received POST data:", request.POST.dict())  # 🔍 Debugging input
 
-            # Format data for model
-            input_data = np.array([[credit_score, annual_income, years_in_current_job]])
+            current_loan_amount = float(request.POST.get("current_loan_amount", "0"))
+            max_open_credit = float(request.POST.get("max_open_credit", "0"))
+            credit_score = float(request.POST.get("credit_score", "0"))
+            annual_income = float(request.POST.get("annual_income", "0"))
 
-            # Make prediction
+            years_in_current_job = request.POST.get("years_in_current_job", "0")
+            years_in_current_job = float(years_in_current_job.replace("+", "").strip())  
+
+            term_str = request.POST.get("term", "").strip()
+            term = 1 if term_str == "Long Term" else 0  # Convert string to integer
+
+            monthly_debt = float(request.POST.get("monthly_debt", "0"))
+            years_credit_history = float(request.POST.get("years_credit_history", "0"))
+            num_open_accounts = float(request.POST.get("num_open_accounts", "0"))
+            num_credit_problems = float(request.POST.get("num_credit_problems", "0"))  
+            current_credit_balance = float(request.POST.get("current_credit_balance", "0"))
+            bankruptcies = float(request.POST.get("bankruptcies", "0"))
+            tax_liens = float(request.POST.get("tax_liens", "0"))
+
+            home_ownership = request.POST.get("home_ownership", "").strip()
+            home_mortgage = home_ownership == "Mortgage"
+            home_own = home_ownership == "Own Home"
+            home_rent = home_ownership == "Rent"
+
+            print("Making input...")
+
+            input_data = np.array([[
+                current_loan_amount, 
+                term,
+                credit_score, 
+                annual_income,
+                years_in_current_job, 
+                monthly_debt, 
+                years_credit_history, 
+                num_open_accounts,
+                num_credit_problems, 
+                current_credit_balance, 
+                max_open_credit, 
+                bankruptcies,
+                tax_liens, 
+                home_mortgage,
+                home_own,
+                home_rent
+            ]], dtype=object)  # Ensure booleans stay booleans
+
+            print('Input ready:', input_data)
+
             prediction = model.predict(input_data)[0]
+            print("Prediction:", prediction)
             
-            # Convert prediction to human-readable response
             prediction_text = "Approved" if prediction == 1 else "Rejected"
 
             return JsonResponse({"result": prediction_text})
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({"error": "Invalid request"}, status=400)
+        except ValueError as ve:  
+            print(f"❌ ValueError: {ve}")  # Debug the error
+            return JsonResponse({"error": f"Invalid input data: {ve}"}, status=400)
+
+        except Exception as e:
+            print(f"❌ General Error: {e}")  
+            return JsonResponse({"error": "An error occurred during prediction."}, status=500)
+
+    return render(request, 'index.html')
 
 
 def registration_user(request):
