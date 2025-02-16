@@ -62,7 +62,6 @@
                 <input type="number" class="form-control" name="max_open_credit">
             </div>
             
-            <!-- Home Ownership -->
             <div class="col-md-6">
                 <label class="form-label">Home Ownership</label>
                 <select class="form-select" name="home_ownership" required>
@@ -111,9 +110,9 @@
                                 $("#main-content").removeClass("blur");
                             }, 5000);
                         },
-                        error: function(xhr, status, error) {  // Improved error handling
+                        error: function(xhr, status, error) {  
                             alert("An error occurred: " + error);
-                            console.error("AJAX error:", status, error, xhr.responseText); // Log the error details
+                            console.error("AJAX error:", status, error, xhr.responseText); 
                         }
                     });
                 });
@@ -123,7 +122,6 @@
 
 <style>
     body {
-        background: url('https://source.unsplash.com/1600x900/?banking,money') no-repeat center center fixed;
         background-size: cover;
         font-family: 'Poppins', sans-serif;
     }

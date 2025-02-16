@@ -23,6 +23,7 @@ urlpatterns = [
     path('registeration-user/', registration_user, name = 'registeration'),
     path('login-user/', login_user, name = 'login'),
     path('predict/', predict_page, name = 'predict'),
+    path('logout-user/', logout_user, name = 'logout_user'),
     
     path('admin/', admin.site.urls),
 ]

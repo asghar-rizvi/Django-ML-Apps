@@ -4,18 +4,15 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-import json
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 import numpy as np
 import joblib
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "core", "model", "loan_status_model.pkl")
 
-# Load the model
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
 else:
@@ -29,8 +26,6 @@ def predict_page(request):
             return JsonResponse({"error": "Model not loaded"}, status=500)
 
         try:
-            print("Received POST data:", request.POST.dict())  # 🔍 Debugging input
-
             current_loan_amount = float(request.POST.get("current_loan_amount", "0"))
             max_open_credit = float(request.POST.get("max_open_credit", "0"))
             credit_score = float(request.POST.get("credit_score", "0"))
@@ -40,7 +35,7 @@ def predict_page(request):
             years_in_current_job = float(years_in_current_job.replace("+", "").strip())  
 
             term_str = request.POST.get("term", "").strip()
-            term = 1 if term_str == "Long Term" else 0  # Convert string to integer
+            term = 1 if term_str == "Long Term" else 0  
 
             monthly_debt = float(request.POST.get("monthly_debt", "0"))
             years_credit_history = float(request.POST.get("years_credit_history", "0"))
@@ -54,8 +49,6 @@ def predict_page(request):
             home_mortgage = home_ownership == "Mortgage"
             home_own = home_ownership == "Own Home"
             home_rent = home_ownership == "Rent"
-
-            print("Making input...")
 
             input_data = np.array([[
                 current_loan_amount, 
@@ -74,19 +67,30 @@ def predict_page(request):
                 home_mortgage,
                 home_own,
                 home_rent
-            ]], dtype=object)  # Ensure booleans stay booleans
-
-            print('Input ready:', input_data)
+            ]], dtype=object) 
 
             prediction = model.predict(input_data)[0]
-            print("Prediction:", prediction)
-            
             prediction_text = "Approved" if prediction == 1 else "Rejected"
+            
+            try:
+                user_prediction = predict_user.objects.get(user=request.user)
+                user_prediction.credit_card_score = credit_score 
+                user_prediction.loan_Status = prediction_text
+                user_prediction.save()
 
+            except predict_user.DoesNotExist:
+                predict_user.objects.create(
+                    user=request.user, 
+                    credit_card_score=credit_score, 
+                    loan_Status=prediction_text
+                )
+            except Exception as e: 
+                print(f"Database update error: {e}")
+                
             return JsonResponse({"result": prediction_text})
 
         except ValueError as ve:  
-            print(f"❌ ValueError: {ve}")  # Debug the error
+            print(f"❌ ValueError: {ve}") 
             return JsonResponse({"error": f"Invalid input data: {ve}"}, status=400)
 
         except Exception as e:
@@ -150,3 +154,7 @@ def login_user(request):
             return redirect('/login-user/')
            
     return render(request, 'login.html')
+
+def logout_user(request):
+    logout(request)
+    return redirect('/login-user/')
