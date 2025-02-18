@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resume{% endblock %}
+
+{% block content %}
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4 shadow-lg rounded-3" style="width: 100%; max-width: 500px;">
+            <h2 class="text-center mb-4">Upload Your Resume</h2>
+            <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="resume" class="form-label">Choose Resume (PDF)</label>
+                    <input type="file" class="form-control" name="resume" id="resume" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Upload</button>
+
+                <!-- Loading spinner (hidden initially) -->
+                <div id="loadingSpinner" class="spinner-border text-primary mt-3" role="status" style="display: none;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </form>
+
+            <!-- Result Box (Initially Hidden) -->
+            <div id="resultBox" class="mt-4 alert alert-info" style="display: none;"></div>
+        </div>
+    </div>
+{% endblock %}
+
+<script>
+    document.getElementById('uploadForm').onsubmit = async function (e) {
+        e.preventDefault(); // Prevent default form submission
+
+        let formData = new FormData(this);
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let resultBox = document.getElementById('resultBox');
+
+        // Show loading spinner
+        loadingSpinner.style.display = 'block';
+        resultBox.style.display = 'none'; // Hide result box before making request
+
+        try {
+            const response = await fetch("{% url 'home_page' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                resultBox.innerHTML = `<strong>Predicted Category:</strong> ${result.data}`;
+                resultBox.classList.add('alert-success'); // Make it green
+            } else {
+                resultBox.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                resultBox.classList.add('alert-danger'); // Make it red
+            }
+
+            resultBox.style.display = 'block'; // Show result box
+
+        } catch (error) {
+            resultBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            resultBox.classList.add('alert-danger');
+            resultBox.style.display = 'block';
+        } finally {
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
+        }
+    };
+</script>
