@@ -6,7 +6,7 @@ This repository contains my projects that integrate **Django** with **Machine Le
 
 | Project Name | ML Model Used | Features |
 |-------------|-------------|---------|
-| **Resume Screening System** | Random Forest Classifier | Classifies resumes into job categories |
+| **Resume Screening System** | Suport Vector Machine | Classifies resumes into job categories |
 | **Credit Score & Loan Approval** | XGBoost ML | Predicts credit scores & automates loan approvals |
 
 
