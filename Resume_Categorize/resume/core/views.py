@@ -1,4 +1,4 @@
-import fitz  
+import PyPDF2
 from django.shortcuts import render,redirect
 from django.contrib.auth.models import User
 from .models import userInfo
@@ -7,29 +7,15 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from io import BytesIO
 import numpy as np
-import pickle
 import logging
 from pathlib import Path
+from django.contrib.auth import update_session_auth_hash
 import json 
+from .preprocess import predict_class, load_models
+
+load_models()
 
 PROJECT_ROOT = Path(__file__).parent.parent 
-
-model_filename = 'resume_classifier.pkl'
-model_path = PROJECT_ROOT / 'model' / model_filename 
-
-try:
-    if model_path.exists():
-        # Open the file in binary read mode
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
-        logging.info(f"Model loaded successfully from {model_path}")
-    else:
-        raise FileNotFoundError(f"Model file not found at {model_path}")
-except FileNotFoundError as e:
-    logging.error(f"Model loading failed: {e}")
-except Exception as e:
-    logging.error(f"An error occurred while loading the model: {e}")
-
 classes_labels_filename = 'label_mapping.json' 
 labels_path = PROJECT_ROOT / 'class_labels' / classes_labels_filename 
 
@@ -51,11 +37,14 @@ def class_label(num):
 
 
 def extract_text_from_pdf(file):
-    text = ""
-    with fitz.open(stream=BytesIO(file.read()), filetype="pdf") as doc:
-        for page in doc:
-            text += page.get_text("text") + "\n"
+    pdf_reader = PyPDF2.PdfReader(file)
+    text = ''
+    for page in pdf_reader.pages:
+        extracted_text = page.extract_text()
+        if extracted_text:  # Ensure extracted text is not None
+            text += extracted_text + '\n'
     return text
+
 
 from django.http import JsonResponse
 
@@ -66,10 +55,10 @@ def home_page(request):
             pdf_file = request.FILES['resume']
             text = extract_text_from_pdf(pdf_file)
             
-            predict = model.predict([text])  # Ensure input is in a list format
-            category = class_label(predict[0])  # Extract single prediction
+            predict = predict_class(text)  
+            category = class_label(predict[0])  
 
-            return JsonResponse({'success': True, 'data': category})
+            return JsonResponse({"result": category})
         else:
             return JsonResponse({'success': False, 'error': 'No file uploaded'}, status=400)
 
@@ -128,11 +117,32 @@ def login_user(request):
 
     return render(request, 'login.html')
 
+@login_required
 def update_user(request):
-    
-    
-    return render(request, 'update.html')
+    if request.method == "POST":
+        user = request.user
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
+        # Update user fields
+        user.first_name = first_name
+        user.last_name = last_name
+        user.username = username
+
+        # If a new password is provided, update it
+        if password:
+            user.set_password(password)
+            update_session_auth_hash(request, user)  # Prevents logout after password change
+        
+        user.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect("update")  # Redirect to the same page to see updated info
+
+    return render(request, "update.html", {"user": request.user})
+
+@login_required
 def logout_user(request):
     logout(request)
     return redirect('register')

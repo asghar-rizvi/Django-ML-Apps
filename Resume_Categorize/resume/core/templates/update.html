@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- User Profile Card -->
+    <div class="card shadow-lg p-4 mb-4" style="max-width: 500px; margin: 0 auto;">
+        <div class="text-center">
+            <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="User Avatar">
+            <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+            <p class="text-muted">@{{ user.username }}</p>
+        </div>
+    </div>
+
+    <!-- Update Profile Form -->
+    <div class="card shadow-lg p-4" style="max-width: 500px; margin: 0 auto;">
+        <h3 class="text-center mb-4">Update Profile</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="first_name" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="last_name" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">New Password (Leave empty to keep old)</label>
+                <input type="password" class="form-control" id="password" name="password">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
