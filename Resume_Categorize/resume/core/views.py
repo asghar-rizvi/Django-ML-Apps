@@ -1,52 +1,13 @@
-import PyPDF2
 from django.shortcuts import render,redirect
 from django.contrib.auth.models import User
-from .models import userInfo
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from io import BytesIO
-import numpy as np
-import logging
-from pathlib import Path
+from django.http import JsonResponse
 from django.contrib.auth import update_session_auth_hash
-import json 
-from .preprocess import predict_class, load_models
+from .preprocess import *
 
 load_models()
-
-PROJECT_ROOT = Path(__file__).parent.parent 
-classes_labels_filename = 'label_mapping.json' 
-labels_path = PROJECT_ROOT / 'class_labels' / classes_labels_filename 
-
-try:
-    if labels_path.exists():
-        with open(labels_path, 'r') as file:
-            job_titles = json.load(file)
-    else:
-        print('file not exist')
-except FileNotFoundError as e:
-    logging.error(f"Model loading failed: {e}")
-
-
-def class_label(num):
-    if str(num) in job_titles:
-        return job_titles[str(num)]
-    else:
-        return "Invalid number"
-
-
-def extract_text_from_pdf(file):
-    pdf_reader = PyPDF2.PdfReader(file)
-    text = ''
-    for page in pdf_reader.pages:
-        extracted_text = page.extract_text()
-        if extracted_text:  # Ensure extracted text is not None
-            text += extracted_text + '\n'
-    return text
-
-
-from django.http import JsonResponse
 
 @login_required
 def home_page(request):
@@ -64,6 +25,44 @@ def home_page(request):
 
     return render(request, 'home.html')
 
+
+def predict_job_placement(request):
+    if request.method == "POST":
+        ssc_percentage = float(request.POST["ssc_percentage"])
+        hsc_percentage = float(request.POST["hsc_percentage"])
+        degree_percentage = float(request.POST["degree_percentage"])
+        emp_test_percentage = float(request.POST["emp_test_percentage"])
+        mba_percent = float(request.POST["mba_percent"])
+
+        gender_M = 1 if request.POST["gender"] == 'M' else 0
+        ssc_board_Others = 1 if request.POST["ssc_board"] == 'Others' else 0
+        hsc_board_Others = 1 if request.POST["hsc_board"] == 'Others' else 0
+
+        hsc_subject = request.POST["hsc_subject"]
+        hsc_subject_Commerce = 1 if hsc_subject == 'Commerce' else 0
+        hsc_subject_Science = 1 if hsc_subject == 'Science' else 0
+
+        undergrad_degree = request.POST["undergrad_degree"]
+        undergrad_degree_Others = 1 if undergrad_degree == 'Others' else 0
+        undergrad_degree_Sci_Tech = 1 if undergrad_degree == 'Sci&Tech' else 0
+
+        work_experience_Yes = 1 if request.POST["work_experience"] == 'Yes' else 0
+
+        specialisation_Mkt_HR = 1 if request.POST["specialisation"] == 'Mkt&HR' else 0
+
+        features = [[
+            ssc_percentage, hsc_percentage, degree_percentage,
+            emp_test_percentage, mba_percent, gender_M, ssc_board_Others,
+            hsc_board_Others, hsc_subject_Commerce, hsc_subject_Science,
+            undergrad_degree_Others, undergrad_degree_Sci_Tech,
+            work_experience_Yes, specialisation_Mkt_HR
+        ]]
+        
+        prediction = predict_placement(features) 
+
+        return JsonResponse({"result": prediction})
+
+    return render(request, "job_placement.html")
 
 def register_user(request):
     if request.method == 'POST':
@@ -110,7 +109,7 @@ def login_user(request):
 
         if user is not None:
             login(request, user)
-            return redirect('home_page')  
+            return redirect('resume')  
         else:
             messages.warning(request, 'Invalid username or password.')
             return redirect('login')  

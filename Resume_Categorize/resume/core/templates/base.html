@@ -31,9 +31,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="/update/">Update</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/resume/">Resume</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/job-placement/">Job Placement</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/update/">Profile</a></li>
                         <li class="nav-item"><a class="nav-link" href="/logout/">Logout</a></li>
                     {% else %}
                     <li class="nav-item"><a class="nav-link" href="/login/">login</a></li>

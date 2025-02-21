@@ -22,7 +22,8 @@ urlpatterns = [
     path('',register_user, name ='home'),
     path('login/',login_user, name ='login'),
     path('register/',register_user, name ='register'),
-    path('home/',home_page, name ='home_page'),
+    path('resume/',home_page, name ='resume'),
+    path('job-placement/',predict_job_placement, name ='job-placement'),
     path('update/',update_user, name ='update'),
     path('logout/',logout_user, name ='logout'),
     

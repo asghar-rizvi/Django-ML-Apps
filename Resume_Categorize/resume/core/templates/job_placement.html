@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5" id="main-content">
+    <div class="card shadow-lg p-4 rounded-lg">
+        <h2 class="text-center mb-4" style="color: #2c3e50; font-weight: bold;">Placement Prediction</h2>
+        <form method="POST" class="row g-3 needs-validation" novalidate id="job_placement">
+            {% csrf_token %}
+            
+            <!-- Column 1 -->
+            <div class="col-md-6">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="gender" required>
+                    <option value='0'>Male</option>
+                    <option value='1'>Female</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">SSC Percentage</label>
+                <input type="number" step="0.01" class="form-control" name="ssc_percentage" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">SSC Board</label>
+                <select class="form-select" name="ssc_board" required>
+                    <option value="Central">Central</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">HSC Percentage</label>
+                <input type="number" step="0.01" class="form-control" name="hsc_percentage" required>
+            </div>
+            
+            <!-- Column 2 -->
+            <div class="col-md-6">
+                <label class="form-label">HSC Board</label>
+                <select class="form-select" name="hsc_board" required>
+                    <option value="Central">Central</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">HSC Subject</label>
+                <select class="form-select" name="hsc_subject" required>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Science">Science</option>
+                    <option value="Arts">Arts</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Degree Percentage</label>
+                <input type="number" step="0.01" class="form-control" name="degree_percentage" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Undergraduate Degree</label>
+                <select class="form-select" name="undergrad_degree" required>
+                    <option value="Sci&Tech">Science & Technology</option>
+                    <option value="Comm&Mgmt">Commerce & Management</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Work Experience</label>
+                <select class="form-select" name="work_experience" required>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Employment Test Percentage</label>
+                <input type="number" step="0.01" class="form-control" name="emp_test_percentage" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Specialisation</label>
+                <select class="form-select" name="specialisation" required>
+                    <option value="Mkt&HR">Marketing & HR</option>
+                    <option value="Mkt&Fin">Marketing & Finance</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">MBA Percentage</label>
+                <input type="number" step="0.01" class="form-control" name="mba_percent" required>
+            </div>
+            
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Predict Placement</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Overlay & Result Modal -->
+<div id="overlay"></div>
+<div id="result-container">
+    <h3 id="result-text"></h3>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+<script>
+    $(document).ready(function() {
+        $(".card").addClass("show");
+
+        $("#job_placement").submit(function(event) {
+            event.preventDefault();  // Prevent default form submission
+            
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: "POST",
+                url: "{% url 'job-placement' %}",  
+                data: formData,
+                dataType: "json",
+                success: function(response) {
+                    // Show overlay & result
+                    $("#result-text").text("Prediction: " + response.result);
+                    $("#overlay").fadeIn();
+                    $("#result-container").fadeIn();
+                    $("#main-content").addClass("blur");
+
+                    setTimeout(function() {
+                        $("#overlay").fadeOut();
+                        $("#result-container").fadeOut();
+                        $("#main-content").removeClass("blur");
+                    }, 3000);
+                },
+                error: function(xhr, status, error) {  
+                    alert("An error occurred: " + error);
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    /* Blur Effect */
+    #overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+    }
+    
+    .btn-primary {
+        background: #2c3e50;
+        border: none;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #1a252f;
+        transform: scale(1.05);
+    }
+    .blur {
+        filter: blur(5px);
+    }
+
+    /* Result Modal */
+    #result-container {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        z-index: 1001;
+    }
+
+    #result-text {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+    }
+
+    .card.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
